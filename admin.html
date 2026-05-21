@@ -1,0 +1,319 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Purple Admin | HNF Master Control</title>
+    
+    <!-- Premium Assets -->
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+
+    <style>
+        :root {
+            --purple-gradient: linear-gradient(to right, #da8cff, #9a55ff);
+            --blue-gradient: linear-gradient(to right, #90caf9, #047edf 99%);
+            --green-gradient: linear-gradient(to right, #84d9d2, #07cdae);
+            --bg: #f2edf3;
+            --sidebar-active: #b66dff;
+            --text-muted: #9c9fa6;
+        }
+
+        body { font-family: 'Ubuntu', sans-serif; background-color: var(--bg); color: #343357; overflow-x: hidden; }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            width: 260px; height: 100vh; background: #fff; position: fixed; 
+            left: 0; top: 0; z-index: 1000; transition: 0.3s; padding-top: 20px;
+        }
+        .sidebar-brand { padding: 0 30px 20px; color: #b66dff; font-weight: 700; font-size: 1.8rem; display: flex; align-items: center; gap: 10px; }
+        
+        .nav-link {
+            color: #3e4b5b; padding: 12px 30px; display: flex; align-items: center; 
+            gap: 15px; text-decoration: none; font-size: 0.9rem; transition: 0.3s;
+            font-weight: 500; cursor: pointer;
+        }
+        .nav-link i { font-size: 1.1rem; width: 25px; }
+        .nav-link:hover, .nav-link.active { color: var(--sidebar-active); background: #f9f9f9; }
+
+        /* --- CONTENT --- */
+        .main-content { margin-left: 260px; padding: 30px; }
+        .glass-box { background: #fff; border-radius: 10px; padding: 25px; box-shadow: 0 0 20px rgba(0,0,0,0.03); border: none; margin-bottom: 30px; }
+        
+        .stat-card { border-radius: 10px; padding: 30px; color: #fff; position: relative; overflow: hidden; height: 100%; border: none; }
+        .card-purple { background: var(--purple-gradient); }
+
+        /* --- ORDER STREAM --- */
+        .order-row { border-bottom: 1px solid #f2f2f2; padding: 20px 0; }
+        .btn-view-proof { background: #b66dff; color: #fff; font-size: 11px; font-weight: 700; border: none; padding: 5px 12px; border-radius: 4px; margin-top: 10px; }
+
+        /* --- SLIDER PREVIEW --- */
+        .slider-card { border-radius: 10px; overflow: hidden; position: relative; margin-bottom: 15px; }
+        .slider-card img { width: 100%; height: 120px; object-fit: cover; }
+        .btn-del-slider { position: absolute; top: 5px; right: 5px; background: rgba(255,0,0,0.7); color: #fff; border: none; border-radius: 50%; width: 25px; height: 25px; font-size: 12px; }
+
+        .admin-section { display: none; }
+        .active-section { display: block; animation: fadeIn 0.4s; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- AUTH --- */
+        #lock-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
+        .auth-card { background: white; padding: 50px; border-radius: 15px; width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; }
+    </style>
+</head>
+<body>
+
+    <!-- Auth -->
+    <div id="lock-screen">
+        <div class="auth-card">
+            <h2 style="color:#b66dff">Purple Login</h2>
+            <input type="email" id="adm-email" class="form-control mb-3" placeholder="Email">
+            <input type="password" id="adm-pass" class="form-control mb-4" placeholder="Password">
+            <button class="btn btn-primary w-100 py-3 fw-bold" style="background:#b66dff; border:none;" onclick="login()">SIGN IN</button>
+        </div>
+    </div>
+
+    <div id="admin-ui" style="display:none;">
+        <aside class="sidebar">
+            <div class="sidebar-brand">Purple Admin</div>
+            <nav>
+                <a onclick="showSec('dash')" class="nav-link active" id="n-dash"><i class="fa-solid fa-house"></i> Dashboard</a>
+                <a onclick="showSec('orders')" class="nav-link" id="n-orders"><i class="fa-solid fa-cart-shopping"></i> Live Orders</a>
+                <a onclick="showSec('stock')" class="nav-link" id="n-stock"><i class="fa-solid fa-box"></i> Inventory</a>
+                <a onclick="showSec('sliders')" class="nav-link" id="n-sliders"><i class="fa-solid fa-images"></i> Manage Sliders</a>
+                <a onclick="showSec('settings')" class="nav-link" id="n-settings"><i class="fa-solid fa-gear"></i> Settings</a>
+                <a onclick="logout()" class="nav-link text-danger mt-5"><i class="fa-solid fa-power-off"></i> Logout</a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            
+            <!-- DASHBOARD -->
+            <section id="sec-dash" class="admin-section active-section">
+                <h4 class="fw-bold mb-4">Dashboard Overview</h4>
+                <div class="row g-4">
+                    <div class="col-md-4"><div class="stat-card card-purple"><h4>Revenue</h4><h2 id="d-rev">Rs 0</h2><i class="fa-solid fa-chart-line card-icon"></i></div></div>
+                </div>
+            </section>
+
+            <!-- ORDERS -->
+            <section id="sec-orders" class="admin-section">
+                <h4 class="fw-bold mb-4">Order Stream</h4>
+                <div class="glass-box" id="order-stream"></div>
+            </section>
+
+            <!-- STOCK -->
+            <section id="sec-stock" class="admin-section">
+                <div class="d-flex justify-content-between mb-4">
+                    <h4 class="fw-bold">Inventory</h4>
+                    <button class="btn btn-primary btn-sm" style="background:#b66dff" data-bs-toggle="modal" data-bs-target="#pModal">+ Add App</button>
+                </div>
+                <div class="glass-box table-responsive">
+                    <table class="table align-middle">
+                        <thead><tr class="text-muted"><th>Icon</th><th>Title</th><th>Price</th><th>Action</th></tr></thead>
+                        <tbody id="stock-table"></tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- SLIDERS -->
+            <section id="sec-sliders" class="admin-section">
+                <h4 class="fw-bold mb-4">Homepage Sliders</h4>
+                <div class="glass-box">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <input type="file" id="sl-file" class="form-control mb-2">
+                            <input type="text" id="sl-url" class="form-control" placeholder="Image URL..." readonly>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100 h-100" style="background:#b66dff" onclick="addSlider()">Upload Slider</button>
+                        </div>
+                    </div>
+                    <div class="row g-3" id="slider-list"></div>
+                </div>
+            </section>
+
+            <!-- SETTINGS -->
+            <section id="sec-settings" class="admin-section">
+                <h4 class="fw-bold mb-4">Site Settings</h4>
+                <div class="glass-box">
+                    <label class="small fw-bold">Marquee Text</label>
+                    <textarea id="s-marquee" class="form-control mb-3" rows="2"></textarea>
+                    <label class="small fw-bold">EasyPaisa No.</label>
+                    <input type="text" id="s-ep" class="form-control mb-3">
+                    <label class="small fw-bold">JazzCash No.</label>
+                    <input type="text" id="s-jc" class="form-control mb-4">
+                    <button class="btn btn-primary fw-bold px-5" style="background:#b66dff" onclick="saveSets()">Save Changes</button>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div class="modal fade" id="pModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content p-4 rounded-3 border-0">
+                <h5 class="fw-bold mb-4">Add Product</h5>
+                <input type="file" id="p-file" class="form-control mb-3">
+                <input type="text" id="p-img" class="form-control mb-3" placeholder="Image URL..." readonly>
+                <input type="text" id="p-title" class="form-control mb-3" placeholder="App Title">
+                <input type="number" id="p-price" class="form-control mb-4" placeholder="Price">
+                <button class="btn btn-primary w-100 py-2 fw-bold" style="background:#b66dff" onclick="saveProd()">PUBLISH</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getDatabase, ref, onValue, set, push, update, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCWx5jPKtZC2B3yBpvGT73DvLVb2TnnvI",
+            authDomain: "wasisupport.firebaseapp.com",
+            databaseURL: "https://wasisupport-default-rtdb.firebaseio.com",
+            projectId: "wasisupport",
+            storageBucket: "wasisupport.firebasestorage.app",
+            messagingSenderId: "478383021828",
+            appId: "1:478383021828:web:476a5a80cc9f466a42ba51"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        const ADMIN_UID = "SnGzKqdOKBbEAfdAe7kC2QzCbto2";
+        const IMGBB_KEY = "6015ce7b66862fcecf4d839bf2a1feae";
+
+        window.showSec = (id) => {
+            document.querySelectorAll('.admin-section').forEach(s => s.classList.remove('active-section'));
+            document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+            document.getElementById(`sec-${id}`).classList.add('active-section');
+            document.getElementById(`n-${id}`).classList.add('active');
+        };
+
+        window.login = () => {
+            const e = document.getElementById('adm-email').value, p = document.getElementById('adm-pass').value;
+            signInWithEmailAndPassword(auth, e, p).catch(() => alert("Error!"));
+        };
+
+        onAuthStateChanged(auth, u => {
+            if(u && u.uid === ADMIN_UID) {
+                document.getElementById('lock-screen').style.display='none';
+                document.getElementById('admin-ui').style.display='block';
+                load();
+            }
+        });
+
+        window.logout = () => signOut(auth).then(() => location.reload());
+
+        // File Uploader Logic
+        const handleUpload = (fileInpId, urlInpId) => {
+            document.getElementById(fileInpId).onchange = (e) => {
+                const fd = new FormData(); fd.append('image', e.target.files[0]);
+                fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, {method:'POST', body:fd})
+                .then(r => r.json()).then(d => document.getElementById(urlInpId).value = d.data.url);
+            };
+        };
+        handleUpload('p-file', 'p-img');
+        handleUpload('sl-file', 'sl-url');
+
+        function load() {
+            // LOAD ORDERS
+            onValue(ref(db, 'orders'), (snap) => {
+                const cont = document.getElementById('order-stream'); cont.innerHTML = '';
+                let rev = 0;
+                if(snap.exists()){
+                    Object.entries(snap.val()).reverse().forEach(([id, o]) => {
+                        rev += (o.status === 'Delivered' ? parseFloat(o.total.replace(/[^0-9.]/g, '')) : 0);
+                        let proofBtn = o.screenshot ? `<button class="btn-view-proof" onclick="window.open('${o.screenshot}', '_blank')">VIEW PAYMENT PROOF</button>` : '';
+                        cont.innerHTML += `
+                        <div class="order-row">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <div class="fw-bold">#${o.oid} - ${o.name}</div>
+                                    <div class="small text-muted">${o.phone} | ${o.items.map(i=>i.title).join(', ')}</div>
+                                    ${proofBtn}
+                                </div>
+                                <div class="text-end">
+                                    <div class="fw-bold" style="color:#b66dff">${o.total}</div>
+                                    <select class="form-select form-select-sm mt-2" onchange="upStatus('${id}', this.value)">
+                                        <option ${o.status==='Pending'?'selected':''}>Pending</option>
+                                        <option ${o.status==='Processing'?'selected':''}>Processing</option>
+                                        <option ${o.status==='Delivered'?'selected':''}>Delivered</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>`;
+                    });
+                }
+                document.getElementById('d-rev').innerText = 'Rs ' + rev;
+            });
+
+            // LOAD STOCK
+            onValue(ref(db, 'products'), (snap) => {
+                const table = document.getElementById('stock-table'); table.innerHTML = '';
+                if(snap.exists()){
+                    Object.entries(snap.val()).forEach(([id, p]) => {
+                        table.innerHTML += `<tr>
+                            <td><img src="${p.image}" width="40" height="40" class="rounded"></td>
+                            <td><div class="fw-bold">${p.title}</div></td>
+                            <td>Rs ${p.price}</td>
+                            <td><i class="fa-solid fa-trash text-danger cursor-pointer" onclick="delP('${id}')"></i></td>
+                        </tr>`;
+                    });
+                }
+            });
+
+            // LOAD SLIDERS
+            onValue(ref(db, 'settings/posters'), (snap) => {
+                const list = document.getElementById('slider-list'); list.innerHTML = '';
+                if(snap.exists()){
+                    Object.entries(snap.val()).forEach(([id, s]) => {
+                        list.innerHTML += `<div class="col-md-3">
+                            <div class="slider-card shadow-sm">
+                                <img src="${s.url}">
+                                <button class="btn-del-slider" onclick="delSlider('${id}')">×</button>
+                            </div>
+                        </div>`;
+                    });
+                }
+            });
+
+            // SETTINGS
+            onValue(ref(db, 'settings'), (snap) => {
+                const s = snap.val() || {};
+                document.getElementById('s-marquee').value = s.marqueeText || '';
+                document.getElementById('s-ep').value = s.ep_number || '';
+                document.getElementById('s-jc').value = s.jc_number || '';
+            });
+        }
+
+        window.upStatus = (id, val) => update(ref(db, `orders/${id}`), {status: val});
+        window.saveProd = () => push(ref(db, 'products'), {title: document.getElementById('p-title').value, price: document.getElementById('p-price').value, image: document.getElementById('p-img').value}).then(() => alert("Done"));
+        window.delP = (id) => remove(ref(db, `products/${id}`));
+        
+        window.addSlider = () => {
+            const url = document.getElementById('sl-url').value;
+            if(!url) return alert("Select image first");
+            push(ref(db, 'settings/posters'), { url }).then(() => {
+                document.getElementById('sl-url').value = '';
+                alert("Slider Added!");
+            });
+        };
+        window.delSlider = (id) => remove(ref(db, `settings/posters/${id}`));
+
+        window.saveSets = () => update(ref(db, 'settings'), {
+            marqueeText: document.getElementById('s-marquee').value,
+            ep_number: document.getElementById('s-ep').value,
+            jc_number: document.getElementById('s-jc').value
+        }).then(() => alert("Updated"));
+
+    </script>
+</body>
+</html>
