@@ -1,4 +1,5 @@
 
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -62,6 +63,12 @@
         /* --- AUTH --- */
         #lock-screen { position: fixed; inset: 0; background: var(--bg); z-index: 2000; display: flex; align-items: center; justify-content: center; }
         .auth-card { background: white; padding: 50px; border-radius: 15px; width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.1); text-align: center; }
+        
+        /* Product Badge Pill in Table */
+        .badge-pill { font-size: 10px; padding: 3px 8px; border-radius: 50px; font-weight: 700; text-transform: uppercase; }
+        .bg-monthly { background: #e8f5e9; color: #2e7d32; }
+        .bg-yearly { background: #fff3e0; color: #ef6c00; }
+        .bg-flash { background: #ffebee; color: #c62828; }
     </style>
 </head>
 <body>
@@ -113,7 +120,7 @@
                 </div>
                 <div class="glass-box table-responsive">
                     <table class="table align-middle">
-                        <thead><tr class="text-muted"><th>Icon</th><th>Title</th><th>Price</th><th>Action</th></tr></thead>
+                        <thead><tr class="text-muted"><th>Icon</th><th>Title</th><th>Badge</th><th>Price</th><th>Action</th></tr></thead>
                         <tbody id="stock-table"></tbody>
                     </table>
                 </div>
@@ -158,10 +165,25 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content p-4 rounded-3 border-0">
                 <h5 class="fw-bold mb-4">Add Product</h5>
+                
+                <label class="small fw-bold mb-1">App Icon</label>
                 <input type="file" id="p-file" class="form-control mb-3">
                 <input type="text" id="p-img" class="form-control mb-3" placeholder="Image URL..." readonly>
-                <input type="text" id="p-title" class="form-control mb-3" placeholder="App Title">
-                <input type="number" id="p-price" class="form-control mb-4" placeholder="Price">
+                
+                <label class="small fw-bold mb-1">App Title</label>
+                <input type="text" id="p-title" class="form-control mb-3" placeholder="e.g. Netflix Premium">
+                
+                <label class="small fw-bold mb-1">Price (Rs)</label>
+                <input type="number" id="p-price" class="form-control mb-3" placeholder="Price">
+
+                <label class="small fw-bold mb-1">Subscription / Badge Type</label>
+                <select id="p-badge" class="form-select mb-4">
+                    <option value="">No Badge</option>
+                    <option value="Monthly">Monthly</option>
+                    <option value="Yearly">Yearly</option>
+                    <option value="Flash Sale">Flash Sale</option>
+                </select>
+
                 <button class="btn btn-primary w-100 py-2 fw-bold" style="background:#b66dff" onclick="saveProd()">PUBLISH</button>
             </div>
         </div>
@@ -260,9 +282,15 @@
                 const table = document.getElementById('stock-table'); table.innerHTML = '';
                 if(snap.exists()){
                     Object.entries(snap.val()).forEach(([id, p]) => {
+                        let badgeClass = '';
+                        if(p.badge === 'Monthly') badgeClass = 'bg-monthly';
+                        else if(p.badge === 'Yearly') badgeClass = 'bg-yearly';
+                        else if(p.badge === 'Flash Sale') badgeClass = 'bg-flash';
+
                         table.innerHTML += `<tr>
                             <td><img src="${p.image}" width="40" height="40" class="rounded"></td>
                             <td><div class="fw-bold">${p.title}</div></td>
+                            <td><span class="badge-pill ${badgeClass}">${p.badge || 'None'}</span></td>
                             <td>Rs ${p.price}</td>
                             <td><i class="fa-solid fa-trash text-danger cursor-pointer" onclick="delP('${id}')"></i></td>
                         </tr>`;
@@ -295,8 +323,35 @@
         }
 
         window.upStatus = (id, val) => update(ref(db, `orders/${id}`), {status: val});
-        window.saveProd = () => push(ref(db, 'products'), {title: document.getElementById('p-title').value, price: document.getElementById('p-price').value, image: document.getElementById('p-img').value}).then(() => alert("Done"));
-        window.delP = (id) => remove(ref(db, `products/${id}`));
+        
+        window.saveProd = () => {
+            const title = document.getElementById('p-title').value;
+            const price = document.getElementById('p-price').value;
+            const image = document.getElementById('p-img').value;
+            const badge = document.getElementById('p-badge').value;
+
+            if(!title || !price || !image) return alert("Please fill all fields");
+
+            push(ref(db, 'products'), {
+                title: title, 
+                price: price, 
+                image: image,
+                badge: badge // Saving badge to Firebase
+            }).then(() => {
+                alert("Product Published!");
+                // Clear and close
+                document.getElementById('p-title').value = '';
+                document.getElementById('p-price').value = '';
+                document.getElementById('p-img').value = '';
+                document.getElementById('p-badge').value = '';
+                const modal = bootstrap.Modal.getInstance(document.getElementById('pModal'));
+                modal.hide();
+            });
+        };
+
+        window.delP = (id) => {
+            if(confirm("Delete this product?")) remove(ref(db, `products/${id}`));
+        }
         
         window.addSlider = () => {
             const url = document.getElementById('sl-url').value;
