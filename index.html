@@ -82,8 +82,8 @@
 <style>
     .wstore-chat-widget {
         position: fixed;
-        bottom: 25px;
-        left: 25px;
+        bottom: 80px; /* Isse aap 100px ya 120px bhi kar sakte hain agar mazeed upar chahiye */
+        left: 20px;
         z-index: 9999;
         display: flex;
         align-items: center;
@@ -92,9 +92,9 @@
     }
 
     .wstore-chat-btn {
-        width: 60px;
-        height: 60px;
-        background-color: #2c1a1a; /* Aapka dark brown color */
+        width: 55px;
+        height: 55px;
+        background-color: #2c1a1a; 
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -102,22 +102,23 @@
         box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         cursor: pointer;
         position: relative;
+        border: 2px solid rgba(255,255,255,0.1);
     }
 
     .wstore-chat-btn svg {
-        width: 30px;
-        height: 30px;
+        width: 28px;
+        height: 28px;
         fill: white;
     }
 
     /* Notification Dot */
     .wstore-badge {
         position: absolute;
-        top: 0;
-        right: 0;
-        width: 15px;
-        height: 15px;
-        background-color: #ff0000;
+        top: -2px;
+        right: -2px;
+        width: 14px;
+        height: 14px;
+        background-color: #ff3b3b;
         border-radius: 50%;
         border: 2px solid white;
         animation: pulse-red 2s infinite;
@@ -125,16 +126,15 @@
 
     /* Tooltip Text */
     .wstore-tooltip {
-        background: white;
-        color: #333;
-        padding: 8px 15px;
-        border-radius: 10px;
-        font-size: 13px;
-        font-weight: bold;
-        margin-left: 12px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        border: 1px solid #eee;
-        display: none; /* Mobile par hide rakha hai */
+        background: #2c1a1a;
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        margin-left: 10px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        display: none; 
     }
 
     @media (min-width: 768px) {
@@ -142,13 +142,13 @@
     }
 
     .wstore-chat-widget:hover {
-        transform: scale(1.1);
+        transform: scale(1.1) translateY(-5px);
     }
 
     @keyframes pulse-red {
-        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
-        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
-        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 59, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(255, 59, 59, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 59, 59, 0); }
     }
 </style>
 
@@ -159,7 +159,7 @@
             <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path>
         </svg>
     </div>
-    <div class="wstore-tooltip">Chat with us!</div>
+    <div class="wstore-tooltip">Support</div>
 </a>
 <!-- Wstorepk Live Support Button End -->
 
