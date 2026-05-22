@@ -9,49 +9,66 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
         .header-bg { background-color: #2c1a1a; }
-        #chat-msgs { height: 72vh; overflow-y: auto; display: flex; flex-direction: column; padding: 15px; background: #f9f9f9; }
-        /* Style for HTML messages */
+        #chat-msgs { height: 72vh; overflow-y: auto; display: flex; flex-direction: column; padding: 15px; background: #f9f9f9; scroll-behavior: smooth; }
         .msg-bot { background: #ffffff; border: 1px solid #eee; padding: 10px 14px; border-radius: 18px 18px 18px 0; margin: 5px 0; align-self: flex-start; max-width: 85%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .msg-user { background: #e2e8f0; color: #000; padding: 10px 14px; border-radius: 18px 18px 0 18px; margin: 5px 0; align-self: flex-end; max-width: 80%; font-size: 14px; }
         .system-msg { align-self: center; background: #eee; color: #666; font-size: 11px; padding: 4px 12px; border-radius: 20px; margin: 10px 0; font-weight: bold; text-transform: uppercase; }
-        .opt-btn { border: 1px solid #2c1a1a; padding: 7px 18px; border-radius: 25px; background: white; margin: 4px; font-size: 13px; color: #2c1a1a; font-weight: 500; transition: 0.3s; }
-        .opt-btn:hover { background: #2c1a1a; color: white; }
-        /* Style links in HTML replies */
-        .msg-bot a { color: #007bff; text-decoration: underline; font-weight: bold; }
+        .opt-btn { border: 1px solid #2c1a1a; padding: 7px 18px; border-radius: 25px; background: white; margin: 4px; font-size: 13px; color: #2c1a1a; font-weight: 500; }
+        
+        /* Typing Animation Dots */
+        .typing { display: flex; align-items: center; gap: 3px; padding: 10px 15px; }
+        .dot { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
+        .dot:nth-child(1) { animation-delay: -0.32s; }
+        .dot:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+        /* iPhone Rating Emojis */
+        .emoji-btn { font-size: 35px; cursor: pointer; transition: transform 0.2s; filter: grayscale(0.3); }
+        .emoji-btn:hover { transform: scale(1.3); filter: grayscale(0); }
     </style>
 </head>
 <body class="bg-gray-200">
     <audio id="msg-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
 
-    <div class="max-w-md mx-auto bg-white h-screen shadow-2xl flex flex-col relative">
-        <!-- Header: Starts with Najeeb Bot by Default -->
+    <div class="max-w-md mx-auto bg-white h-screen shadow-2xl flex flex-col relative overflow-hidden">
+        <!-- Header -->
         <div class="header-bg p-4 flex items-center text-white min-h-[75px] shadow-md z-10">
             <div id="agent-header" class="flex items-center w-full">
-                <!-- Default Bot Image -->
                 <img id="agent-dp" src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="w-12 h-12 rounded-full mr-3 border-2 border-white object-cover bg-white p-1">
                 <div class="flex-grow">
                     <h3 id="agent-name" class="font-bold text-base leading-tight">Najeeb Bot</h3>
-                    <p id="agent-status-text" class="text-[11px] text-gray-300 flex items-center">
-                         Automated Assistant
-                    </p>
+                    <p id="agent-status-text" class="text-[11px] text-gray-300">Automated Assistant</p>
                 </div>
             </div>
         </div>
 
-        <!-- Name Input Screen -->
+        <!-- Name Screen -->
         <div id="reg-screen" class="flex-grow flex flex-col justify-center px-8 text-center bg-white">
-            <h2 class="text-xl font-extrabold text-gray-800 mb-6">Wstorepk Live Support</h2>
-            <input type="text" id="u-name" class="w-full border-2 border-gray-100 p-3 rounded-xl mb-4 outline-none focus:border-[#2c1a1a]" placeholder="Enter Your Name">
-            <button onclick="startChat()" class="header-bg text-white w-full py-3 rounded-xl font-bold">Start Chat</button>
+            <h2 class="text-xl font-extrabold text-gray-800 mb-6 uppercase tracking-tighter">Live Support</h2>
+            <input type="text" id="u-name" class="w-full border-2 border-gray-100 p-4 rounded-2xl mb-4 outline-none focus:border-[#2c1a1a]" placeholder="Enter Your Name">
+            <button onclick="startChat()" class="header-bg text-white w-full py-4 rounded-2xl font-bold shadow-xl">START CONVERSATION</button>
         </div>
 
         <!-- Chat Screen -->
-        <div id="chat-screen" class="flex-grow flex flex-col hidden overflow-hidden">
+        <div id="chat-screen" class="flex-grow flex flex-col hidden">
             <div id="chat-msgs"></div>
             <div id="options-box" class="p-3 flex flex-wrap justify-center bg-white border-t border-gray-100"></div>
+            
+            <!-- Rating Section (Hidden initially) -->
+            <div id="rating-section" class="p-5 bg-white border-t hidden text-center">
+                <p class="text-sm font-bold mb-3 text-gray-600">Please rate your experience:</p>
+                <div class="flex justify-around">
+                    <span onclick="submitRating('😍')" class="emoji-btn">😍</span>
+                    <span onclick="submitRating('🙂')" class="emoji-btn">🙂</span>
+                    <span onclick="submitRating('😐')" class="emoji-btn">😐</span>
+                    <span onclick="submitRating('☹️')" class="emoji-btn">☹️</span>
+                    <span onclick="submitRating('😡')" class="emoji-btn">😡</span>
+                </div>
+            </div>
+
             <div id="input-box" class="p-4 border-t border-gray-100 flex items-center bg-white hidden">
-                <input type="text" id="msg-input" class="flex-grow outline-none text-sm bg-gray-50 p-3 rounded-l-xl" placeholder="Type your message...">
-                <button onclick="sendMsg()" class="header-bg text-white px-5 py-3 rounded-r-xl font-bold">Send</button>
+                <input type="text" id="msg-input" class="flex-grow outline-none text-sm bg-gray-50 p-3 rounded-l-xl" placeholder="Type message...">
+                <button onclick="sendMsg()" class="header-bg text-white px-5 py-3 rounded-r-xl font-bold">SEND</button>
             </div>
         </div>
     </div>
@@ -68,51 +85,81 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        let sid = "", userName = "", hasAgentJoined = false;
+        let sid = "", userName = "", hasAgentJoined = false, isClosed = false;
 
         function startChat() {
             userName = document.getElementById('u-name').value.trim();
-            if(!userName) return alert("Please enter name");
+            if(!userName) return alert("Enter name");
             sid = "chat_" + Date.now();
             document.getElementById('reg-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             
             db.ref('sessions/'+sid).set({ userName, status: 'active' });
-            botReply("Welcome to Welcome to Wstorepk ! Please select your preferred language to continue.");
+            botReply("Welcome to Wstorepk ! Please select your preferred language to continue.");
             showOpts(['English', 'اردو', 'Roman Urdu'], 'lang');
 
-            // Agent Check
+            // Listen for changes
             db.ref('sessions/'+sid).on('value', snap => {
                 const data = snap.val();
-                if(data && data.agent) {
+                if(!data) return;
+
+                if(data.agent && !hasAgentJoined) {
                     document.getElementById('agent-name').innerText = data.agent.name;
                     document.getElementById('agent-dp').src = data.agent.dp;
-                    document.getElementById('agent-status-text').innerHTML = '<span class="w-2 h-2 bg-green-400 rounded-full mr-1 animate-pulse"></span> Active Now';
+                    document.getElementById('agent-status-text').innerHTML = '<span class="text-green-400">● Active Now</span>';
                     document.getElementById('input-box').classList.remove('hidden');
-                    if(!hasAgentJoined) {
-                        systemMsg(`${data.agent.name} joined the conversation`);
-                        document.getElementById('msg-sound').play();
-                        hasAgentJoined = true;
-                    }
+                    systemMsg(`${data.agent.name} joined the conversation`);
+                    hasAgentJoined = true;
                 }
-                if(data && data.status === 'closed') { alert("Conversation Ended"); location.reload(); }
+
+                if(data.status === 'closed' && !isClosed) {
+                    handleClosure();
+                }
             });
 
-            // Listen for Messages (HTML SUPPORTED)
             db.ref('messages/'+sid).on('child_added', snap => {
                 const m = snap.val();
                 if(m.sender !== userName) {
-                    botReply(m.text); // renders HTML
+                    botReply(m.text);
                     document.getElementById('msg-sound').play();
                 }
             });
         }
 
-        function botReply(t) {
+        function botReply(text) {
             const box = document.getElementById('chat-msgs');
-            // Use innerHTML to support HTML replies from Admin
-            box.innerHTML += `<div class="msg-bot">${t}</div>`;
+            const typingId = "typing_" + Date.now();
+            
+            // Show Typing Effect
+            box.innerHTML += `<div id="${typingId}" class="msg-bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
             box.scrollTop = box.scrollHeight;
+
+            setTimeout(() => {
+                const typingEl = document.getElementById(typingId);
+                if(typingEl) {
+                    typingEl.classList.remove('typing');
+                    typingEl.innerHTML = text; // Supports HTML
+                }
+                box.scrollTop = box.scrollHeight;
+            }, 1500);
+        }
+
+        function handleClosure() {
+            isClosed = true;
+            document.getElementById('input-box').classList.add('hidden');
+            const closingMsg = `<b>Dear sir,</b><br>Kafi time sy ap chat ma response nh kr rhay ha jes ki wja sy ma chat close kr rha hon but don't worry ap again livechat ma a skty ha hamari team ap ki help ky liya 24hr available ha, thank sir<br><b>Have a good day!</b>`;
+            botReply(closingMsg);
+            
+            setTimeout(() => {
+                document.getElementById('rating-section').classList.remove('hidden');
+                document.getElementById('chat-msgs').scrollTop = document.getElementById('chat-msgs').scrollHeight;
+            }, 2500);
+        }
+
+        function submitRating(emoji) {
+            db.ref('sessions/'+sid).update({ rating: emoji });
+            document.getElementById('rating-section').innerHTML = `<p class="text-green-600 font-bold p-3">Thank you for your feedback! ${emoji}</p>`;
+            setTimeout(() => { location.reload(); }, 3000);
         }
 
         function systemMsg(t) {
