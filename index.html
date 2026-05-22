@@ -78,6 +78,90 @@
     </style>
 </head>
 <body>
+    <!-- Wstorepk Live Support Button Start -->
+<style>
+    .wstore-chat-widget {
+        position: fixed;
+        bottom: 25px;
+        left: 25px;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        text-decoration: none;
+        transition: transform 0.3s ease;
+    }
+
+    .wstore-chat-btn {
+        width: 60px;
+        height: 60px;
+        background-color: #2c1a1a; /* Aapka dark brown color */
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        cursor: pointer;
+        position: relative;
+    }
+
+    .wstore-chat-btn svg {
+        width: 30px;
+        height: 30px;
+        fill: white;
+    }
+
+    /* Notification Dot */
+    .wstore-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 15px;
+        height: 15px;
+        background-color: #ff0000;
+        border-radius: 50%;
+        border: 2px solid white;
+        animation: pulse-red 2s infinite;
+    }
+
+    /* Tooltip Text */
+    .wstore-tooltip {
+        background: white;
+        color: #333;
+        padding: 8px 15px;
+        border-radius: 10px;
+        font-size: 13px;
+        font-weight: bold;
+        margin-left: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border: 1px solid #eee;
+        display: none; /* Mobile par hide rakha hai */
+    }
+
+    @media (min-width: 768px) {
+        .wstore-tooltip { display: block; }
+    }
+
+    .wstore-chat-widget:hover {
+        transform: scale(1.1);
+    }
+
+    @keyframes pulse-red {
+        0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.7); }
+        70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(255, 0, 0, 0); }
+        100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 0, 0, 0); }
+    }
+</style>
+
+<a href="https://wstorepk.netlify.app/livesupport.html" class="wstore-chat-widget" target="_blank">
+    <div class="wstore-chat-btn">
+        <div class="wstore-badge"></div>
+        <svg viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"></path>
+        </svg>
+    </div>
+    <div class="wstore-tooltip">Chat with us!</div>
+</a>
+<!-- Wstorepk Live Support Button End -->
 
     <div id="eliteToast">Action Done!</div>
 
