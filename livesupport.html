@@ -8,43 +8,48 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     
-    <!-- EmailJS Library Addition -->
+    <!-- EmailJS Library -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script type="text/javascript">
        (function(){
-          emailjs.init("OOffYOVaBYznz3QQ5"); // Aapki Public Key
+          emailjs.init("OOffYOVaBYznz3QQ5"); 
        })();
     </script>
 
     <style>
         .header-bg { background-color: #2c1a1a; }
-        #chat-msgs { height: 70vh; overflow-y: auto; display: flex; flex-direction: column; padding: 10px; }
-        .msg-bot { background: #f3f4f6; padding: 10px; border-radius: 15px 15px 15px 0; margin: 5px; align-self: flex-start; max-width: 80%; font-size: 14px; }
-        .msg-user { background: #e5e7eb; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; align-self: flex-end; max-width: 80%; font-size: 14px; }
-        .opt-btn { border: 1px solid #ddd; padding: 6px 15px; border-radius: 20px; background: white; margin: 3px; font-size: 13px; }
+        #chat-msgs { height: 70vh; overflow-y: auto; display: flex; flex-direction: column; padding: 10px; background-color: #f9f9f9; }
+        .msg-bot { background: #ffffff; padding: 10px; border-radius: 15px 15px 15px 0; margin: 5px; align-self: flex-start; max-width: 80%; font-size: 14px; border: 1px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .msg-user { background: #2c1a1a; color: white; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; align-self: flex-end; max-width: 80%; font-size: 14px; }
+        .opt-btn { border: 1px solid #ddd; padding: 6px 15px; border-radius: 20px; background: white; margin: 3px; font-size: 13px; cursor: pointer; transition: 0.3s; }
+        .opt-btn:hover { background: #2c1a1a; color: white; }
     </style>
 </head>
 <body class="bg-gray-100">
-    <audio id="msg-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+    <!-- Sounds -->
+    <audio id="incoming-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
+    <audio id="outgoing-sound" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3" preload="auto"></audio>
 
     <div class="max-w-md mx-auto bg-white h-screen shadow-lg flex flex-col">
+        <!-- Header Section -->
         <div class="header-bg p-4 flex items-center text-white min-h-[70px]">
-            <div id="agent-info" class="flex items-center hidden">
-                <img id="agent-dp" class="w-10 h-10 rounded-full mr-3 border border-white">
+            <div id="header-content" class="flex items-center w-full">
+                <img id="header-dp" class="w-10 h-10 rounded-full mr-3 border border-white" src="https://i.imgur.com/v0p6V86.png"> <!-- Default Bot DP -->
                 <div>
-                    <h3 id="agent-name" class="font-bold text-sm"></h3>
-                    <p class="text-[10px] text-green-400">● Online</p>
+                    <h3 id="header-name" class="font-bold text-sm">Hania Amir (Bot)</h3>
+                    <p id="header-status" class="text-[10px] text-green-400">● Online</p>
                 </div>
             </div>
-            <div id="default-head" class="w-full text-center font-bold">Wstorepk Support</div>
         </div>
 
+        <!-- Registration Screen -->
         <div id="reg-screen" class="p-10 text-center">
             <h2 class="font-bold mb-4">Please Enter Your Name</h2>
             <input type="text" id="u-name" class="w-full border p-2 rounded mb-4 outline-none" placeholder="Your Name">
             <button onclick="startChat()" class="header-bg text-white w-full py-2 rounded">Start Chat</button>
         </div>
 
+        <!-- Chat Screen -->
         <div id="chat-screen" class="flex-grow flex flex-col hidden">
             <div id="chat-msgs"></div>
             <div id="options-box" class="p-2 flex flex-wrap justify-center bg-gray-50 border-t"></div>
@@ -68,7 +73,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         let sid = "", userName = "";
-        let isEmailSent = false; // To prevent multiple emails in one session
+        let isEmailSent = false;
 
         function startChat() {
             userName = document.getElementById('u-name').value;
@@ -78,59 +83,49 @@
             document.getElementById('chat-screen').classList.remove('hidden');
             
             db.ref('sessions/'+sid).set({ userName, status: 'active' });
+            sendNotificationEmail("User " + userName + " is waiting for support.");
 
-            // Admin ko email bhejne ka function call
-            sendNotificationEmail("A new user named '" + userName + "' has started a live support chat.");
-
-            botReply("Welcome to Wstorepk! Please select your preferred language to continue.");
+            botReply("Welcome to Wstorepk! I am Hania, your virtual assistant. Please select your language.");
             showOpts(['English', 'اردو', 'Roman Urdu'], 'lang');
 
+            // Agent Assignment Listener (FIXED)
             db.ref('sessions/'+sid).on('value', snap => {
                 const data = snap.val();
-                if(data.agent) {
-                    document.getElementById('default-head').classList.add('hidden');
-                    document.getElementById('agent-info').classList.remove('hidden');
-                    document.getElementById('agent-name').innerText = data.agent.name;
-                    document.getElementById('agent-dp').src = data.agent.dp;
+                if(data && data.agent) {
+                    // Switch Bot info with Agent info
+                    document.getElementById('header-name').innerText = data.agent.name;
+                    document.getElementById('header-dp').src = data.agent.dp;
+                    document.getElementById('header-status').innerText = "● Agent Assigned";
                     document.getElementById('input-box').classList.remove('hidden');
                 }
-                if(data.status === 'closed') { alert("Chat Ended"); location.reload(); }
+                if(data && data.status === 'closed') { alert("Chat Ended"); location.reload(); }
             });
 
+            // Incoming Message Listener
             db.ref('messages/'+sid).on('child_added', snap => {
                 const m = snap.val();
                 if(m.sender !== userName) {
                     botReply(m.text);
-                    document.getElementById('msg-sound').play();
+                    document.getElementById('incoming-sound').play().catch(e=>{});
                 }
             });
 
+            // Timeout for busy agents
             setTimeout(() => {
                 db.ref('sessions/'+sid).once('value', s => {
-                    if(!s.val().agent) {
-                        botReply("Currently all agents are busy please hold or send your issue we will solve it.");
+                    const data = s.val();
+                    if(data && !data.agent) {
+                        botReply("Our agents are currently busy. You can leave your message here and we will get back to you.");
                         document.getElementById('input-box').classList.remove('hidden');
                     }
                 });
-            }, 240000);
+            }, 60000); // 1 minute timeout
         }
 
-        // --- Naya Email Notification Function ---
-        function sendNotificationEmail(messageText) {
-            if (isEmailSent) return; // Aik session mein aik hi email jayegi
-
-            const templateParams = {
-                message: messageText,
-                from_name: userName || "New User"
-            };
-
-            emailjs.send('service_s7gw64h', 'template_ni8n90o', templateParams)
-                .then(function(response) {
-                   console.log('Email Sent to Admin!', response.status, response.text);
-                   isEmailSent = true; 
-                }, function(error) {
-                   console.log('Email failed...', error);
-                });
+        function sendNotificationEmail(text) {
+            if (isEmailSent) return;
+            emailjs.send('service_s7gw64h', 'template_ni8n90o', { message: text, from_name: userName });
+            isEmailSent = true;
         }
 
         function botReply(t) {
@@ -148,13 +143,14 @@
                 btn.innerText = o;
                 btn.onclick = () => {
                     document.getElementById('chat-msgs').innerHTML += `<div class="msg-user">${o}</div>`;
+                    document.getElementById('outgoing-sound').play().catch(e=>{});
                     box.innerHTML = "";
                     db.ref('sessions/'+sid+'/path').push(o);
                     if(type === 'lang') {
                         botReply("Please select your issue:");
                         showOpts(['Account Issue', 'Order Issue', 'Order Pending', 'Other'], 'issue');
                     } else {
-                        botReply("Please hold on we are connecting you to a specialist.");
+                        botReply("Connecting you to our specialist. Please wait...");
                     }
                 };
                 box.appendChild(btn);
@@ -164,12 +160,13 @@
         function sendMsg() {
             const t = document.getElementById('msg-input').value;
             if(!t) return;
-
-            // Agar user ne koi text likha hai to email trigger ho (agar pehle nahi hui)
-            sendNotificationEmail("User sent a manual message: " + t);
-
+            
             db.ref('messages/'+sid).push({ sender: userName, text: t });
             document.getElementById('chat-msgs').innerHTML += `<div class="msg-user">${t}</div>`;
+            
+            // User send sound
+            document.getElementById('outgoing-sound').play().catch(e=>{});
+            
             document.getElementById('msg-input').value = "";
             document.getElementById('chat-msgs').scrollTop = document.getElementById('chat-msgs').scrollHeight;
         }
