@@ -7,68 +7,50 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- EmailJS Library Addition -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script type="text/javascript">
+       (function(){
+          emailjs.init("OOffYOVaBYznz3QQ5"); // Aapki Public Key
+       })();
+    </script>
+
     <style>
         .header-bg { background-color: #2c1a1a; }
-        #chat-msgs { height: 72vh; overflow-y: auto; display: flex; flex-direction: column; padding: 15px; background: #f9f9f9; scroll-behavior: smooth; }
-        .msg-bot { background: #ffffff; border: 1px solid #eee; padding: 10px 14px; border-radius: 18px 18px 18px 0; margin: 5px 0; align-self: flex-start; max-width: 85%; font-size: 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
-        .msg-user { background: #e2e8f0; color: #000; padding: 10px 14px; border-radius: 18px 18px 0 18px; margin: 5px 0; align-self: flex-end; max-width: 80%; font-size: 14px; }
-        .system-msg { align-self: center; background: #eee; color: #666; font-size: 11px; padding: 4px 12px; border-radius: 20px; margin: 10px 0; font-weight: bold; text-transform: uppercase; }
-        .opt-btn { border: 1px solid #2c1a1a; padding: 7px 18px; border-radius: 25px; background: white; margin: 4px; font-size: 13px; color: #2c1a1a; font-weight: 500; }
-        
-        /* Typing Animation Dots */
-        .typing { display: flex; align-items: center; gap: 3px; padding: 10px 15px; }
-        .dot { width: 6px; height: 6px; background: #999; border-radius: 50%; animation: bounce 1.4s infinite ease-in-out; }
-        .dot:nth-child(1) { animation-delay: -0.32s; }
-        .dot:nth-child(2) { animation-delay: -0.16s; }
-        @keyframes bounce { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-
-        /* iPhone Rating Emojis */
-        .emoji-btn { font-size: 35px; cursor: pointer; transition: transform 0.2s; filter: grayscale(0.3); }
-        .emoji-btn:hover { transform: scale(1.3); filter: grayscale(0); }
+        #chat-msgs { height: 70vh; overflow-y: auto; display: flex; flex-direction: column; padding: 10px; }
+        .msg-bot { background: #f3f4f6; padding: 10px; border-radius: 15px 15px 15px 0; margin: 5px; align-self: flex-start; max-width: 80%; font-size: 14px; }
+        .msg-user { background: #e5e7eb; padding: 10px; border-radius: 15px 15px 0 15px; margin: 5px; align-self: flex-end; max-width: 80%; font-size: 14px; }
+        .opt-btn { border: 1px solid #ddd; padding: 6px 15px; border-radius: 20px; background: white; margin: 3px; font-size: 13px; }
     </style>
 </head>
-<body class="bg-gray-200">
+<body class="bg-gray-100">
     <audio id="msg-sound" src="https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3" preload="auto"></audio>
 
-    <div class="max-w-md mx-auto bg-white h-screen shadow-2xl flex flex-col relative overflow-hidden">
-        <!-- Header -->
-        <div class="header-bg p-4 flex items-center text-white min-h-[75px] shadow-md z-10">
-            <div id="agent-header" class="flex items-center w-full">
-                <img id="agent-dp" src="https://cdn-icons-png.flaticon.com/512/4712/4712035.png" class="w-12 h-12 rounded-full mr-3 border-2 border-white object-cover bg-white p-1">
-                <div class="flex-grow">
-                    <h3 id="agent-name" class="font-bold text-base leading-tight">Najeeb Bot</h3>
-                    <p id="agent-status-text" class="text-[11px] text-gray-300">Automated Assistant</p>
+    <div class="max-w-md mx-auto bg-white h-screen shadow-lg flex flex-col">
+        <div class="header-bg p-4 flex items-center text-white min-h-[70px]">
+            <div id="agent-info" class="flex items-center hidden">
+                <img id="agent-dp" class="w-10 h-10 rounded-full mr-3 border border-white">
+                <div>
+                    <h3 id="agent-name" class="font-bold text-sm"></h3>
+                    <p class="text-[10px] text-green-400">● Online</p>
                 </div>
             </div>
+            <div id="default-head" class="w-full text-center font-bold">Wstorepk Support</div>
         </div>
 
-        <!-- Name Screen -->
-        <div id="reg-screen" class="flex-grow flex flex-col justify-center px-8 text-center bg-white">
-            <h2 class="text-xl font-extrabold text-gray-800 mb-6 uppercase tracking-tighter">Live Support</h2>
-            <input type="text" id="u-name" class="w-full border-2 border-gray-100 p-4 rounded-2xl mb-4 outline-none focus:border-[#2c1a1a]" placeholder="Enter Your Name">
-            <button onclick="startChat()" class="header-bg text-white w-full py-4 rounded-2xl font-bold shadow-xl">START CONVERSATION</button>
+        <div id="reg-screen" class="p-10 text-center">
+            <h2 class="font-bold mb-4">Please Enter Your Name</h2>
+            <input type="text" id="u-name" class="w-full border p-2 rounded mb-4 outline-none" placeholder="Your Name">
+            <button onclick="startChat()" class="header-bg text-white w-full py-2 rounded">Start Chat</button>
         </div>
 
-        <!-- Chat Screen -->
         <div id="chat-screen" class="flex-grow flex flex-col hidden">
             <div id="chat-msgs"></div>
-            <div id="options-box" class="p-3 flex flex-wrap justify-center bg-white border-t border-gray-100"></div>
-            
-            <!-- Rating Section (Hidden initially) -->
-            <div id="rating-section" class="p-5 bg-white border-t hidden text-center">
-                <p class="text-sm font-bold mb-3 text-gray-600">Please rate your experience:</p>
-                <div class="flex justify-around">
-                    <span onclick="submitRating('😍')" class="emoji-btn">😍</span>
-                    <span onclick="submitRating('🙂')" class="emoji-btn">🙂</span>
-                    <span onclick="submitRating('😐')" class="emoji-btn">😐</span>
-                    <span onclick="submitRating('☹️')" class="emoji-btn">☹️</span>
-                    <span onclick="submitRating('😡')" class="emoji-btn">😡</span>
-                </div>
-            </div>
-
-            <div id="input-box" class="p-4 border-t border-gray-100 flex items-center bg-white hidden">
-                <input type="text" id="msg-input" class="flex-grow outline-none text-sm bg-gray-50 p-3 rounded-l-xl" placeholder="Type message...">
-                <button onclick="sendMsg()" class="header-bg text-white px-5 py-3 rounded-r-xl font-bold">SEND</button>
+            <div id="options-box" class="p-2 flex flex-wrap justify-center bg-gray-50 border-t"></div>
+            <div id="input-box" class="p-3 border-t flex hidden">
+                <input type="text" id="msg-input" class="flex-grow outline-none text-sm" placeholder="Type a message...">
+                <button onclick="sendMsg()" class="text-blue-600 font-bold px-2">Send</button>
             </div>
         </div>
     </div>
@@ -85,36 +67,34 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        let sid = "", userName = "", hasAgentJoined = false, isClosed = false;
+        let sid = "", userName = "";
+        let isEmailSent = false; // To prevent multiple emails in one session
 
         function startChat() {
-            userName = document.getElementById('u-name').value.trim();
-            if(!userName) return alert("Enter name");
+            userName = document.getElementById('u-name').value;
+            if(!userName) return;
             sid = "chat_" + Date.now();
             document.getElementById('reg-screen').classList.add('hidden');
             document.getElementById('chat-screen').classList.remove('hidden');
             
             db.ref('sessions/'+sid).set({ userName, status: 'active' });
-            botReply("Welcome to Wstorepk ! Please select your preferred language to continue.");
+
+            // Admin ko email bhejne ka function call
+            sendNotificationEmail("A new user named '" + userName + "' has started a live support chat.");
+
+            botReply("Welcome to Wstorepk! Please select your preferred language to continue.");
             showOpts(['English', 'اردو', 'Roman Urdu'], 'lang');
 
-            // Listen for changes
             db.ref('sessions/'+sid).on('value', snap => {
                 const data = snap.val();
-                if(!data) return;
-
-                if(data.agent && !hasAgentJoined) {
+                if(data.agent) {
+                    document.getElementById('default-head').classList.add('hidden');
+                    document.getElementById('agent-info').classList.remove('hidden');
                     document.getElementById('agent-name').innerText = data.agent.name;
                     document.getElementById('agent-dp').src = data.agent.dp;
-                    document.getElementById('agent-status-text').innerHTML = '<span class="text-green-400">● Active Now</span>';
                     document.getElementById('input-box').classList.remove('hidden');
-                    systemMsg(`${data.agent.name} joined the conversation`);
-                    hasAgentJoined = true;
                 }
-
-                if(data.status === 'closed' && !isClosed) {
-                    handleClosure();
-                }
+                if(data.status === 'closed') { alert("Chat Ended"); location.reload(); }
             });
 
             db.ref('messages/'+sid).on('child_added', snap => {
@@ -124,47 +104,38 @@
                     document.getElementById('msg-sound').play();
                 }
             });
-        }
-
-        function botReply(text) {
-            const box = document.getElementById('chat-msgs');
-            const typingId = "typing_" + Date.now();
-            
-            // Show Typing Effect
-            box.innerHTML += `<div id="${typingId}" class="msg-bot typing"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>`;
-            box.scrollTop = box.scrollHeight;
 
             setTimeout(() => {
-                const typingEl = document.getElementById(typingId);
-                if(typingEl) {
-                    typingEl.classList.remove('typing');
-                    typingEl.innerHTML = text; // Supports HTML
-                }
-                box.scrollTop = box.scrollHeight;
-            }, 1500);
+                db.ref('sessions/'+sid).once('value', s => {
+                    if(!s.val().agent) {
+                        botReply("Currently all agents are busy please hold or send your issue we will solve it.");
+                        document.getElementById('input-box').classList.remove('hidden');
+                    }
+                });
+            }, 240000);
         }
 
-        function handleClosure() {
-            isClosed = true;
-            document.getElementById('input-box').classList.add('hidden');
-            const closingMsg = `<b>Dear sir,</b><br>Kafi time sy ap chat ma response nh kr rhay ha jes ki wja sy ma chat close kr rha hon but don't worry ap again livechat ma a skty ha hamari team ap ki help ky liya 24hr available ha, thank sir<br><b>Have a good day!</b>`;
-            botReply(closingMsg);
-            
-            setTimeout(() => {
-                document.getElementById('rating-section').classList.remove('hidden');
-                document.getElementById('chat-msgs').scrollTop = document.getElementById('chat-msgs').scrollHeight;
-            }, 2500);
+        // --- Naya Email Notification Function ---
+        function sendNotificationEmail(messageText) {
+            if (isEmailSent) return; // Aik session mein aik hi email jayegi
+
+            const templateParams = {
+                message: messageText,
+                from_name: userName || "New User"
+            };
+
+            emailjs.send('service_s7gw64h', 'template_ni8n90o', templateParams)
+                .then(function(response) {
+                   console.log('Email Sent to Admin!', response.status, response.text);
+                   isEmailSent = true; 
+                }, function(error) {
+                   console.log('Email failed...', error);
+                });
         }
 
-        function submitRating(emoji) {
-            db.ref('sessions/'+sid).update({ rating: emoji });
-            document.getElementById('rating-section').innerHTML = `<p class="text-green-600 font-bold p-3">Thank you for your feedback! ${emoji}</p>`;
-            setTimeout(() => { location.reload(); }, 3000);
-        }
-
-        function systemMsg(t) {
+        function botReply(t) {
             const box = document.getElementById('chat-msgs');
-            box.innerHTML += `<div class="system-msg">${t}</div>`;
+            box.innerHTML += `<div class="msg-bot">${t}</div>`;
             box.scrollTop = box.scrollHeight;
         }
 
@@ -191,8 +162,12 @@
         }
 
         function sendMsg() {
-            const t = document.getElementById('msg-input').value.trim();
+            const t = document.getElementById('msg-input').value;
             if(!t) return;
+
+            // Agar user ne koi text likha hai to email trigger ho (agar pehle nahi hui)
+            sendNotificationEmail("User sent a manual message: " + t);
+
             db.ref('messages/'+sid).push({ sender: userName, text: t });
             document.getElementById('chat-msgs').innerHTML += `<div class="msg-user">${t}</div>`;
             document.getElementById('msg-input').value = "";
