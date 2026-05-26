@@ -10,7 +10,94 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<!-- WSTORE pk - High Quality 3D Splash Injector -->
+<script>
+(function() {
+    // 1. Create and Inject CSS
+    const css = `
+        @import url('https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Montserrat:wght@100&display=swap');
+        
+        #wstore-splash-wrapper {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100vh;
+            background: #000; z-index: 999999; display: flex;
+            justify-content: center; align-items: center; flex-direction: column;
+            transition: opacity 1s ease, visibility 1s; overflow: hidden;
+            font-family: 'Montserrat', sans-serif;
+        }
 
+        .w-container { position: relative; text-align: center; perspective: 1500px; }
+
+        .w-svg { width: 80vw; max-width: 600px; filter: drop-shadow(0 0 25px rgba(212,175,55,0.4)); }
+
+        .w-stroke {
+            fill: none; stroke: #d4af37; stroke-width: 1.2;
+            stroke-dasharray: 1200; stroke-dashoffset: 1200;
+            animation: drawW 3.5s ease-in-out forwards;
+            font-family: 'Syncopate', sans-serif; font-size: 80px; letter-spacing: 12px;
+        }
+
+        .w-fill {
+            fill: linear-gradient(to right, #ae7d00, #f7ef8a, #ae7d00);
+            fill: #d4af37; opacity: 0;
+            animation: fillW 2s ease-in forwards 2.5s;
+            font-family: 'Syncopate', sans-serif; font-size: 80px; letter-spacing: 12px;
+        }
+
+        .pk-text {
+            color: #fff; letter-spacing: 25px; margin-top: 20px;
+            opacity: 0; transform: translateZ(100px);
+            animation: showPk 1.5s forwards 3.8s;
+        }
+
+        .gold-line {
+            width: 0; height: 1px; background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            margin-top: 15px; animation: expandLine 2s forwards 3.5s;
+        }
+
+        @keyframes drawW { to { stroke-dashoffset: 0; } }
+        @keyframes fillW { 0% { opacity: 0; filter: blur(10px); } 100% { opacity: 1; filter: blur(0); } }
+        @keyframes showPk { to { opacity: 1; letter-spacing: 15px; } }
+        @keyframes expandLine { to { width: 300px; } }
+
+        /* Hide Scrollbar during splash */
+        body.splash-active { overflow: hidden !important; }
+    `;
+
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = css;
+    document.head.appendChild(styleSheet);
+
+    // 2. Inject HTML into Body
+    window.addEventListener('DOMContentLoaded', () => {
+        document.body.classList.add('splash-active');
+        
+        const splashHTML = `
+            <div id="wstore-splash-wrapper">
+                <div class="w-container">
+                    <svg viewBox="0 0 900 150" class="w-svg">
+                        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="w-stroke">WSTORE</text>
+                        <text x="50%" y="50%" text-anchor="middle" dominant-baseline="middle" class="w-fill">WSTORE</text>
+                    </svg>
+                    <div class="pk-text">PAKISTAN</div>
+                    <center><div class="gold-line"></div></center>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('afterbegin', splashHTML);
+
+        // 3. Remove Splash after 5.5 seconds
+        setTimeout(() => {
+            const wrapper = document.getElementById('wstore-splash-wrapper');
+            if(wrapper) {
+                wrapper.style.opacity = '0';
+                wrapper.style.visibility = 'hidden';
+                document.body.classList.remove('splash-active');
+                setTimeout(() => wrapper.remove(), 1000);
+            }
+        }, 5500);
+    });
+})();
+</script>
     <style>
         :root {
             --primary: #f2a900;
