@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>WASI Store · premium</title>
+  <!-- Google Fonts & Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.25s ease, color 0.2s ease;
+      margin-bottom: 80px;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+    :root {
+      --primary: #f2a900;
+      --bg: #f8faff;
+      --text: #1a1a2e;
+      --card-bg: #ffffff;
+      --border: #e9edf5;
+      --shadow: 0 12px 30px rgba(0,0,0,0.04);
+      --radius: 24px;
+      --transition: 0.3s cubic-bezier(0.2, 0.9, 0.4, 1);
+    }
+    [data-theme="dark"] {
+      --bg: #0d0f1a;
+      --text: #f0f3fa;
+      --card-bg: #191d2b;
+      --border: #2a2f42;
+      --shadow: 0 12px 30px rgba(0,0,0,0.6);
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 20px; }
+
+    /* splash override – already inlined, we keep it */
+
+    /* marquee */
+    .marquee-wrapper {
+      background: #0b0d17;
+      color: #eaeef5;
+      padding: 8px 0;
+      font-size: 13px;
+      font-weight: 600;
+      overflow: hidden;
+      position: relative;
+      border-bottom: 1px solid rgba(255,215,0,0.15);
+      letter-spacing: 0.5px;
+    }
+    .marquee-content {
+      display: inline-block;
+      white-space: nowrap;
+      animation: marqueeAnim 28s linear infinite;
+      padding-left: 100%;
+    }
+    @keyframes marqueeAnim { 0% { transform: translate(0,0); } 100% { transform: translate(-100%,0); } }
+
+    /* HEADER */
+    .main-header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 0;
+      position: sticky;
+      top: 0;
+      z-index: 1040;
+      backdrop-filter: blur(14px);
+      background: rgba(var(--bg-rgb, 248,250,255), 0.75);
+      box-shadow: 0 2px 16px rgba(0,0,0,0.02);
+    }
+    .logo-box a {
+      font-weight: 800;
+      font-size: 1.4rem;
+      letter-spacing: -0.5px;
+      color: var(--text);
+      text-decoration: none;
+    }
+    .logo-box a span:first-child { color: var(--primary); }
+    .logo-box a span:last-child { color: var(--text); opacity: 0.6; font-weight: 600; }
+    .cart-badge {
+      position: absolute;
+      top: -6px; right: -10px;
+      background: var(--primary);
+      color: #0b0d17;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 40px;
+      box-shadow: 0 4px 8px rgba(242,169,0,0.3);
+    }
+    .header-icons i { color: var(--text); transition: 0.2s; }
+    .header-icons i:hover { color: var(--primary); transform: scale(1.05); }
+
+    /* SIDEBAR — premium smooth */
+    .sidebar {
+      position: fixed; top: 0; left: -300px;
+      width: 290px; height: 100%;
+      background: var(--card-bg);
+      z-index: 2100;
+      transition: left 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: 30px 20px;
+      box-shadow: 20px 0 40px rgba(0,0,0,0.08);
+      border-right: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+    }
+    .sidebar.active { left: 0; }
+    .sidebar-overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.25);
+      z-index: 2050;
+      display: none;
+      backdrop-filter: blur(6px);
+      transition: opacity 0.3s;
+    }
+    .side-link {
+      display: flex; align-items: center; gap: 14px;
+      padding: 14px 16px;
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 16px;
+      margin-bottom: 4px;
+      transition: 0.2s;
+      cursor: pointer;
+    }
+    .side-link:hover { background: var(--primary); color: #0b0d17; transform: translateX(4px); }
+    .side-link i { width: 24px; font-size: 1.1rem; }
+
+    /* PRODUCT CARDS */
+    .product-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.3s;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+    }
+    .product-card:hover { transform: translateY(-5px); box-shadow: 0 20px 35px rgba(0,0,0,0.06); }
+    .img-container {
+      position: relative; aspect-ratio: 1/1;
+      overflow: hidden; background: #f4f7fe;
+    }
+    .img-container img { width: 100%; height: 100%; object-fit: cover; transition: 0.4s; }
+    .product-card:hover .img-container img { transform: scale(1.03); }
+    .p-badge {
+      position: absolute; top: 12px; left: -28px;
+      font-size: 9px; font-weight: 800; padding: 4px 36px;
+      transform: rotate(-45deg); z-index: 5;
+      color: white; text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .badge-yearly { background: #f39c12; }
+    .badge-monthly { background: #3498db; }
+    .badge-sale { background: #e74c3c; }
+    .product-info {
+      padding: 14px 12px 16px;
+    }
+    .product-title {
+      font-weight: 700; font-size: 0.9rem;
+      display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    }
+    .product-price {
+      font-weight: 800; color: var(--primary); font-size: 1.1rem; margin: 4px 0 8px;
+    }
+
+    /* tracking */
+    .track-card {
+      background: var(--card-bg);
+      border-radius: 18px;
+      padding: 16px 18px;
+      border: 1px solid var(--border);
+      margin-bottom: 12px;
+      box-shadow: var(--shadow);
+      transition: 0.2s;
+    }
+    .status-pill {
+      font-size: 10px; font-weight: 800; padding: 5px 12px;
+      border-radius: 60px; text-transform: uppercase;
+      background: #eef2f9; color: #1e293b;
+    }
+    .st-Pending { background: #fff3cd; color: #856404; }
+    .st-Processing { background: #cce5ff; color: #004085; }
+    .st-Delivered { background: #d4edda; color: #155724; }
+
+    /* bottom nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; width: 100%;
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      display: grid; grid-template-columns: repeat(4,1fr);
+      padding: 10px 0 12px;
+      border-top: 1px solid var(--border);
+      z-index: 1000;
+      box-shadow: 0 -6px 20px rgba(0,0,0,0.02);
+    }
+    .nav-item {
+      color: #8e94a8; cursor: pointer; transition: 0.2s;
+      display: flex; flex-direction: column; align-items: center;
+    }
+    .nav-item.active { color: var(--primary); }
+    .nav-item i { font-size: 22px; margin-bottom: 2px; }
+    .nav-item span { font-size: 10px; font-weight: 700; }
+
+    /* toast */
+    #eliteToast {
+      position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+      background: #1a1a2e; color: #fff; padding: 12px 28px;
+      border-radius: 60px; z-index: 9999; display: none;
+      font-weight: 700; font-size: 0.9rem;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.2);
+      border: 1px solid rgba(255,215,0,0.2);
+    }
+
+    /* LOADING SHIMMER (smooth) */
+    .shimmer-grid {
+      display: grid; grid-template-columns: repeat(2,1fr); gap: 12px;
+    }
+    .shimmer-card {
+      background: var(--card-bg); border-radius: var(--radius);
+      height: 220px; border: 1px solid var(--border);
+      background: linear-gradient(110deg, var(--card-bg) 30%, #eef2f9 50%, var(--card-bg) 70%);
+      background-size: 200% 100%;
+      animation: shimmer 1.6s infinite;
+    }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+    .hero-img { height: 200px; object-fit: cover; width: 100%; border-radius: 18px; }
+    .btn-warning { background: var(--primary); border: none; font-weight: 700; color: #0b0d17; }
+    .btn-warning:hover { background: #df9c00; color: #0b0d17; transform: scale(0.98); }
+
+    /* chat widget already fine */
+
+    .modal-content { border-radius: 28px; background: var(--card-bg); color: var(--text); }
+    .form-control { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 60px; padding: 12px 18px; }
+    .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(242,169,0,0.2); }
+
+    /* extra touch */
+    .cursor-pointer { cursor: pointer; }
+    .fw-800 { font-weight: 800; }
+    .bg-light-custom { background: var(--bg); }
+
+    @media (min-width: 600px) {
+      .shimmer-grid { grid-template-columns: repeat(3,1fr); }
+    }
+  </style>
+</head>
+<body>
+  <!-- splash already injected via script -->
+
+  <div id="eliteToast">✨ Done</div>
+
+  <!-- marquee -->
+  <div class="marquee-wrapper" id="marquee-box">
+    <div class="marquee-content" id="marquee-text">✦ WASI Store · premium digital goods · 24/7 support ✦</div>
+  </div>
+
+  <!-- overlay + sidebar -->
+  <div class="sidebar-overlay" id="overlay" onclick="toggleSidebar()"></div>
+  <div class="sidebar" id="sidebar-menu">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="fw-800 m-0" style="color:var(--primary);">✦ WASI</h4>
+      <i class="fa-solid fa-xmark fs-4 cursor-pointer" onclick="toggleSidebar()" style="color:var(--text);"></i>
+    </div>
+    <div id="side-user-box" class="mb-4 p-3 rounded-4" style="background:var(--bg); border:1px solid var(--border);">
+      <div class="small fw-600 opacity-75">Welcome,</div>
+      <div id="side-user-name" class="fw-800" style="color:var(--primary);">Guest</div>
+    </div>
+    <div class="side-link" onclick="switchPage('home')"><i class="fa-solid fa-house"></i> Home</div>
+    <div class="side-link" onclick="switchPage('profile')"><i class="fa-solid fa-receipt"></i> My Orders</div>
+    <div class="side-link" onclick="switchPage('settings')"><i class="fa-solid fa-user-gear"></i> Settings</div>
+    <div class="side-link text-danger mt-4" onclick="logoutUser()"><i class="fa-solid fa-power-off"></i> Logout</div>
+  </div>
+
+  <!-- header -->
+  <header class="main-header">
+    <div class="container d-flex justify-content-between align-items-center">
+      <div class="d-flex align-items-center gap-3">
+        <i class="fa-solid fa-bars-staggered fs-4 cursor-pointer" onclick="toggleSidebar()" style="color:var(--text);"></i>
+        <div class="logo-box"><a href="#" onclick="switchPage('home')"><span>WASI</span><span>STORE</span></a></div>
+      </div>
+      <div class="d-flex align-items-center gap-3">
+        <div class="cursor-pointer" onclick="toggleTheme()"><i class="fa-solid fa-moon fs-5" style="color:var(--text);"></i></div>
+        <div class="position-relative cursor-pointer" onclick="switchPage('cart')">
+          <i class="fa-solid fa-bag-shopping fs-4" style="color:var(--text);"></i>
+          <span class="cart-badge" id="cart-count">0</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="container mt-3">
+    <!-- HOME -->
+    <section id="home-page" class="page-section">
+      <div id="heroSlider" class="carousel slide rounded-4 overflow-hidden mb-4 shadow-sm" data-bs-ride="carousel">
+        <div class="carousel-inner" id="slider-inner">
+          <div class="carousel-item active"><img src="https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&w=1200&q=80" class="hero-img"></div>
+        </div>
+      </div>
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="fw-800 m-0">✨ All Products</h5>
+        <span class="badge bg-warning text-dark fw-700 px-3 py-2 rounded-pill">hot</span>
+      </div>
+      <!-- loading placeholder + grid -->
+      <div id="product-grid" class="row g-2"></div>
+    </section>
+
+    <!-- CART -->
+    <section id="cart-page" class="page-section" style="display:none;">
+      <div class="py-4">
+        <h3 class="fw-800 mb-4"><i class="fa-solid fa-bag-shopping me-2" style="color:var(--primary);"></i>Your Bag</h3>
+        <div id="cart-items"></div>
+        <div id="cart-summary" class="card p-4 border-0 shadow-sm rounded-4 mt-4" style="display:none; background:var(--card-bg);">
+          <div class="d-flex justify-content-between mb-3 fs-5 fw-800"><span>Grand Total</span><span id="gtotal">0</span></div>
+          <button class="btn btn-warning w-100 py-3 fw-800 rounded-pill" onclick="checkOut()">CHECKOUT →</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRACKING -->
+    <section id="profile-page" class="page-section" style="display:none;">
+      <div class="py-4">
+        <h3 class="fw-800 mb-4"><i class="fa-solid fa-truck me-2" style="color:var(--primary);"></i>Order History</h3>
+        <div id="tracking-container"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section id="settings-page" class="page-section" style="display:none;">
+      <div class="py-4">
+        <h3 class="fw-800 mb-4"><i class="fa-solid fa-sliders me-2" style="color:var(--primary);"></i>Settings</h3>
+        <div class="card p-4 border-0 shadow-sm rounded-4" style="background:var(--card-bg);">
+          <label class="small fw-800 mb-2">Display Name</label>
+          <input type="text" id="up-name" class="form-control mb-3">
+          <label class="small fw-800 mb-2">Password</label>
+          <input type="text" id="up-pass" class="form-control mb-4">
+          <button class="btn btn-warning w-100 py-2 fw-800 rounded-pill" onclick="updateProfile()">SAVE</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- AUTH -->
+    <section id="auth-page" class="page-section" style="display:none;">
+      <div class="py-5">
+        <div class="card p-4 border-0 shadow-sm mx-auto rounded-4" style="max-width:400px; background:var(--card-bg);">
+          <div id="login-box">
+            <h4 class="fw-800 mb-4 text-center">Sign In</h4>
+            <input type="email" id="l-email" class="form-control mb-3" placeholder="Email">
+            <input type="password" id="l-pass" class="form-control mb-4" placeholder="Password">
+            <button class="btn btn-warning w-100 py-2 fw-800 rounded-pill" onclick="loginUser()">LOGIN</button>
+            <p class="text-center mt-3 small">New? <a href="#" class="text-warning fw-800" onclick="toggleAuth(false)">Register</a></p>
+          </div>
+          <div id="signup-box" style="display:none;">
+            <h4 class="fw-800 mb-4 text-center">Register</h4>
+            <input type="text" id="r-name" class="form-control mb-3" placeholder="Full Name">
+            <input type="email" id="r-email" class="form-control mb-3" placeholder="Email">
+            <input type="password" id="r-pass" class="form-control mb-4" placeholder="Password">
+            <button class="btn btn-warning w-100 py-2 fw-800 rounded-pill" onclick="signupUser()">SIGN UP</button>
+            <p class="text-center mt-3 small">Have account? <a href="#" class="text-warning fw-800" onclick="toggleAuth(true)">Login</a></p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- bottom nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active" onclick="switchPage('home')" id="nav-home"><i class="fa-solid fa-house"></i><span>Shop</span></div>
+    <div class="nav-item" onclick="switchPage('cart')" id="nav-cart"><i class="fa-solid fa-bag-shopping"></i><span>Cart</span></div>
+    <div class="nav-item" onclick="switchPage('profile')" id="nav-profile"><i class="fa-solid fa-receipt"></i><span>Track</span></div>
+    <div class="nav-item" onclick="handleProfileNav()" id="nav-user"><i class="fa-solid fa-user-gear"></i><span>Account</span></div>
+  </div>
+
+  <!-- WhatsApp -->
+  <a href="https://wa.me/994401879953" class="float-wa" style="position:fixed; bottom:100px; right:20px; background:#25d366; color:white; width:55px; height:55px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:30px; z-index:1000; box-shadow:0 8px 24px rgba(37,211,102,0.3); text-decoration:none;" target="_blank"><i class="fa-brands fa-whatsapp"></i></a>
+
+  <!-- Checkout Modal -->
+  <div class="modal fade" id="coModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content border-0 rounded-4">
+        <div class="modal-body p-4">
+          <h5 class="fw-800 mb-4 text-center">Complete Payment</h5>
+          <div class="p-3 bg-light-custom rounded-3 mb-3 small border" style="background:var(--bg);">
+            EasyPaisa: <b id="ep-num">...</b><br>JazzCash: <b id="jc-num">...</b>
+          </div>
+          <input type="text" id="co-name" class="form-control mb-2" placeholder="Full Name">
+          <input type="tel" id="co-phone" class="form-control mb-3" placeholder="WhatsApp No.">
+          <h6 class="small fw-800 mb-2 text-warning">Upload Payment Screenshot</h6>
+          <input type="file" id="co-ss-file" class="form-control mb-3" accept="image/*">
+          <input type="hidden" id="co-ss-url">
+          <div id="ss-loader" class="small mb-3 text-muted" style="display:none;"><i class="fa-solid fa-spinner fa-spin"></i> Uploading...</div>
+          <button class="btn btn-warning w-100 py-3 fw-800 rounded-pill" onclick="submitOrder()">PLACE ORDER</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, set, push, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDCWx5jPKtZC2B3yBpvGT73DvLVb2TnnvI",
+      authDomain: "wasisupport.firebaseapp.com",
+      databaseURL: "https://wasisupport-default-rtdb.firebaseio.com",
+      projectId: "wasisupport",
+      storageBucket: "wasisupport.firebasestorage.app",
+      messagingSenderId: "478383021828",
+      appId: "1:478383021828:web:476a5a80cc9f466a42ba51"
+    };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let products = [], cart = JSON.parse(localStorage.getItem('hnf_cart')) || [], user = JSON.parse(localStorage.getItem('hnf_user')) || null;
+    let currency = 'Rs';
+    const IMGBB_KEY = "6015ce7b66862fcecf4d839bf2a1feae";
+
+    // ----- helpers -----
+    window.showToast = (msg) => { const t = document.getElementById('eliteToast'); t.innerText = msg; t.style.display = 'block'; setTimeout(()=>t.style.display='none', 2800); };
+    window.toggleSidebar = () => {
+      const side = document.getElementById('sidebar-menu'), over = document.getElementById('overlay');
+      if (side.style.left === '0px') { side.style.left = '-300px'; over.style.display = 'none'; } 
+      else { side.style.left = '0px'; over.style.display = 'block'; }
+    };
+    window.toggleTheme = () => {
+      const h = document.documentElement;
+      h.setAttribute('data-theme', h.getAttribute('data-theme')==='light' ? 'dark' : 'light');
+      document.documentElement.style.setProperty('--bg-rgb', h.getAttribute('data-theme')==='light' ? '248,250,255' : '13,15,26');
+    };
+    window.toggleAuth = (st) => { document.getElementById('login-box').style.display = st?'block':'none'; document.getElementById('signup-box').style.display = st?'none':'block'; };
+
+    // ----- realtime settings (marquee, slider, numbers) -----
+    onValue(ref(db, 'settings'), (snap) => {
+      const s = snap.val() || {};
+      currency = s.currency || 'Rs';
+      document.getElementById('ep-num').innerText = s.ep_number || 'N/A';
+      document.getElementById('jc-num').innerText = s.jc_number || 'N/A';
+      if(s.marqueeText) {
+        document.getElementById('marquee-box').style.display = 'block';
+        document.getElementById('marquee-text').innerText = '✦ ' + s.marqueeText + ' ✦';
+      } else { document.getElementById('marquee-box').style.display = 'none'; }
+      if(s.posters) {
+        const inner = document.getElementById('slider-inner');
+        inner.innerHTML = '';
+        Object.entries(s.posters).forEach(([id, p], i) => {
+          inner.innerHTML += `<div class="carousel-item ${i===0?'active':''}"><img src="${p.url}" class="hero-img"></div>`;
+        });
+      }
+    });
+
+    // ----- products realtime -----
+    onValue(ref(db, 'products'), (snap) => {
+      products = snap.val() ? Object.entries(snap.val()) : [];
+      renderGrid(products);
+    });
+
+    function renderGrid(items) {
+      const g = document.getElementById('product-grid');
+      g.innerHTML = '';
+      if (!items.length) { g.innerHTML = `<div class="col-12 text-center py-5 opacity-50">✨ no products yet</div>`; return; }
+      items.forEach(([id, p]) => {
+        let bH = '';
+        if(p.badge) bH = `<span class="p-badge badge-${p.badge.toLowerCase()}">${p.badge}</span>`;
+        g.innerHTML += `<div class="col-6 col-md-4 col-lg-3">
+          <div class="product-card">
+            <div class="img-container">${bH}<img src="${p.image}" loading="lazy"></div>
+            <div class="product-info">
+              <div class="product-title">${p.title}</div>
+              <div class="product-price">${currency} ${p.price}</div>
+              <div class="small fw-700 text-warning cursor-pointer mt-2" onclick="addToCart('${id}')">+ ADD</div>
+            </div>
+          </div>
+        </div>`;
+      });
+      document.getElementById('cart-count').innerText = cart.length;
+    }
+
+    window.addToCart = (id) => {
+      const found = products.find(x => x[0] === id);
+      if (!found) return;
+      const p = found[1];
+      cart.push({ id, ...p });
+      localStorage.setItem('hnf_cart', JSON.stringify(cart));
+      document.getElementById('cart-count').innerText = cart.length;
+      showToast('➕ added');
+    };
+
+    // ----- page switching -----
+    window.switchPage = (id) => {
+      document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+      const page = document.getElementById(`${id}-page`);
+      if (page) page.style.display = 'block';
+      const nav = document.getElementById(`nav-${id}`);
+      if (nav) nav.classList.add('active');
+      if (id === 'cart') renderCart();
+      if (id === 'profile') renderTracking();
+      if (id === 'settings' && user) { document.getElementById('up-name').value = user.name; document.getElementById('up-pass').value = user.pass || ''; }
+      if (document.getElementById('sidebar-menu').style.left === '0px') toggleSidebar();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // ----- cart -----
+    function renderCart() {
+      const box = document.getElementById('cart-items');
+      if (!cart.length) { box.innerHTML = '<p class="text-center py-5 opacity-50">🛒 empty</p>'; document.getElementById('cart-summary').style.display = 'none'; return; }
+      let t = 0; box.innerHTML = '';
+      cart.forEach((item, i) => { t += parseFloat(item.price);
+        box.innerHTML += `<div class="d-flex align-items-center gap-3 mb-2 p-2 bg-light-custom rounded-4 shadow-sm" style="background:var(--card-bg); border:1px solid var(--border);">
+          <img src="${item.image}" width="48" class="rounded-3" style="object-fit:cover; aspect-ratio:1/1;">
+          <div class="flex-grow-1"><div class="fw-800 small">${item.title}</div><div class="text-warning fw-800">${currency} ${item.price}</div></div>
+          <i class="fa-solid fa-trash text-danger cursor-pointer" onclick="remCart(${i})"></i>
+        </div>`;
+      });
+      document.getElementById('gtotal').innerText = currency + ' ' + t;
+      document.getElementById('cart-summary').style.display = 'block';
+    }
+    window.remCart = (i) => { cart.splice(i,1); localStorage.setItem('hnf_cart', JSON.stringify(cart)); renderCart(); document.getElementById('cart-count').innerText = cart.length; };
+
+    // ----- tracking -----
+    window.renderTracking = () => {
+      if (!user) return switchPage('auth');
+      onValue(ref(db, 'orders'), (snap) => {
+        const cont = document.getElementById('tracking-container'); cont.innerHTML = '';
+        if (!snap.exists()) { cont.innerHTML = '<p class="text-center py-4 opacity-50">📦 no orders</p>'; return; }
+        Object.entries(snap.val()).reverse().forEach(([id, o]) => {
+          if (o.userId === user.id) {
+            cont.innerHTML += `<div class="track-card">
+              <div class="d-flex justify-content-between mb-2"><span class="fw-800">#${o.oid}</span><span class="status-pill st-${o.status}">${o.status}</span></div>
+              <div class="small fw-600 text-muted">${o.date}</div>
+              <div class="small mt-2">${o.items.map(i=>i.title).join(', ')}</div>
+              <div class="fw-800 text-warning mt-1">${o.total}</div>
+            </div>`;
+          }
+        });
+      });
+    };
+
+    // ----- auth -----
+    window.loginUser = () => {
+      const e = document.getElementById('l-email').value, p = document.getElementById('l-pass').value;
+      onValue(ref(db, 'users'), (snap) => {
+        const us = snap.val(); let f = null;
+        for(let id in us) if(us[id].email === e && us[id].pass === p) f = us[id];
+        if(f) { localStorage.setItem('hnf_user', JSON.stringify(f)); location.reload(); } else showToast('❌ invalid');
+      }, { onlyOnce: true });
+    };
+    window.signupUser = () => {
+      const n = document.getElementById('r-name').value, e = document.getElementById('r-email').value, p = document.getElementById('r-pass').value;
+      const uid = Date.now();
+      set(ref(db, `users/${uid}`), { id: uid, name: n, email: e, pass: p }).then(() => { showToast('✅ registered'); toggleAuth(true); });
+    };
+    window.updateProfile = () => {
+      if (!user) return;
+      update(ref(db, `users/${user.id}`), { name: document.getElementById('up-name').value, pass: document.getElementById('up-pass').value }).then(() => {
+        user.name = document.getElementById('up-name').value; user.pass = document.getElementById('up-pass').value;
+        localStorage.setItem('hnf_user', JSON.stringify(user)); showToast('💾 saved');
+      });
+    };
+    window.logoutUser = () => { localStorage.removeItem('hnf_user'); location.reload(); };
+    window.handleProfileNav = () => { if(user) switchPage('settings'); else switchPage('auth'); };
+    window.checkOut = () => { if(user) new bootstrap.Modal(document.getElementById('coModal')).show(); else switchPage('auth'); };
+
+    // imgBB upload
+    document.getElementById('co-ss-file').onchange = (e) => {
+      const fd = new FormData(); fd.append('image', e.target.files[0]);
+      document.getElementById('ss-loader').style.display = 'block';
+      fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_KEY}`, { method:'POST', body: fd })
+        .then(r => r.json()).then(data => { document.getElementById('co-ss-url').value = data.data.url; document.getElementById('ss-loader').innerHTML = '✓ uploaded'; });
+    };
+
+    window.submitOrder = () => {
+      const n = document.getElementById('co-name').value, ph = document.getElementById('co-phone').value, ss = document.getElementById('co-ss-url').value;
+      if(!n || !ph || !ss) return showToast('⚠️ fill all fields');
+      const oid = 'WASI-'+Math.floor(1000+Math.random()*9000);
+      const order = { oid, userId: user.id, name: n, phone: ph, screenshot: ss, items: cart, total: document.getElementById('gtotal').innerText, status: 'Pending', date: new Date().toLocaleString() };
+      push(ref(db, 'orders'), order).then(() => { cart = []; localStorage.removeItem('hnf_cart'); showToast('✅ order placed!'); switchPage('profile'); });
+    };
+
+    // init: load cart count, user
+    document.getElementById('cart-count').innerText = cart.length;
+    if (user) document.getElementById('side-user-name').innerText = user.name;
+    // set background rgb variable
+    document.documentElement.style.setProperty('--bg-rgb', '248,250,255');
+    // show home
+    switchPage('home');
+  </script>
+</body>
+</html>
